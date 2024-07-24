@@ -14,7 +14,7 @@ func (p *Plugin) registerCommand() error {
 	if err := p.API.RegisterCommand(&model.Command{
 		Trigger:          CommandTrigger,
 		AutoComplete:     true,
-		AutoCompleteHint: "[@someone or ~channel] [what] [when]",
+		AutoCompleteHint: "[what] [when]",
 		AutoCompleteDesc: "Set a reminder",
 	}); err != nil {
 		return fmt.Errorf("%s: %w", "failed to register command", err)
@@ -34,8 +34,13 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	location := p.location(user)
 	command := strings.Trim(args.Command, " ")
 
+	channel, cErr := p.API.GetChannel(args.ChannelId)
+	if cErr != nil {
+		return &model.CommandResponse{}, cErr
+	}
+
 	if strings.Trim(command, " ") == "/"+CommandTrigger {
-		p.InteractiveSchedule(args.TriggerId, user)
+		p.InteractiveSchedule(args.TriggerId, channel, user)
 		return &model.CommandResponse{}, nil
 	}
 
@@ -94,7 +99,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		Payload:  payload,
 		Reminder: Reminder{},
 	}
-	reminder, err := p.ScheduleReminder(&request, args.ChannelId, user.Id)
+	reminder, err := p.ScheduleReminder(&request, args.ChannelId)
 
 	if err != nil {
 		post := model.Post{

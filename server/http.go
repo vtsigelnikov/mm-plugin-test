@@ -56,21 +56,18 @@ func (p *Plugin) handleDialog(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	channel, cErr := p.API.GetChannel(request.ChannelId)
+	if cErr != nil {
+		p.API.LogError(cErr.Error())
+		return
+	}
+
 	T, _ := p.translation(user)
 	location := p.location(user)
 
 	message := request.Submission["message"]
-	target := request.Submission["target"]
+	target := "~" + channel.Name
 	ttime := request.Submission["time"]
-
-	if target == nil {
-		target = T("me")
-	}
-	if target != T("me") &&
-		!strings.HasPrefix(target.(string), "@") &&
-		!strings.HasPrefix(target.(string), "~") {
-		target = "@" + target.(string)
-	}
 
 	var when string
 	if ttime.(string) == "unit.test" {
@@ -95,7 +92,7 @@ func (p *Plugin) handleDialog(w http.ResponseWriter, req *http.Request) {
 			Username:  user.Username,
 			Message:   message.(string),
 			Completed: p.emptyTime,
-			Target:    target.(string),
+			Target:    target,
 			When:      when,
 		},
 	}
@@ -140,7 +137,7 @@ func (p *Plugin) handleDialog(w http.ResponseWriter, req *http.Request) {
 
 	reminder := &model.Post{
 		ChannelId: request.ChannelId,
-		UserId:    user.Id,
+		UserId:    p.botUserId,
 		Props: model.StringInterface{
 			"attachments": []*model.SlackAttachment{
 				{

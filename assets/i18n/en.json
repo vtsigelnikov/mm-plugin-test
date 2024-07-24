@@ -125,11 +125,11 @@
   },
   {
     "id": "action.snooze.tomorrow",
-    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9am tomorrow"
+    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9:00 tomorrow"
   },
   {
     "id": "action.snooze.nextweek",
-    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9am Monday"
+    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9:00 Monday"
   },
   {
     "id": "button.next.reminders",
@@ -174,6 +174,10 @@
   {
     "id": "button.snooze",
     "translation": "Snooze"
+  },
+  {
+    "id": "button.snooze.10sec",
+    "translation": "10 seconds"
   },
   {
     "id": "button.snooze.10min",
@@ -301,7 +305,7 @@
   },
   {
     "id": "button.snooze.tomorrow",
-    "translation": "Tomorrow at 9AM"
+    "translation": "Tomorrow at 9:00"
   },
   {
     "id": "button.snooze.1day",
@@ -333,15 +337,15 @@
   },
   {
     "id": "snooze.tomorrow",
-    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9am tomorrow"
+    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9:00 tomorrow"
   },
   {
     "id": "button.snooze.nextweek",
-    "translation": "Next week"
+    "translation": "Monday at 9:00"
   },
   {
     "id": "snooze.nextweek",
-    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9am Monday"
+    "translation": "Snoozed. I’ll remind you \"{{.Message}}\" at 9:00 Monday"
   },
   {
   	"id": "clear.response",

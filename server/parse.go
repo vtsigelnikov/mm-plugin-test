@@ -11,101 +11,50 @@ import (
 	"github.com/mattermost/mattermost/server/public/model"
 )
 
-func (p *Plugin) ParseRequest(request *ReminderRequest) error {
-
+func (p *Plugin) ParseRequest(request *ReminderRequest, channel *model.Channel) error {
 	user, uErr := p.API.GetUserByUsername(request.Username)
 	if uErr != nil {
 		return uErr
 	}
 	T, _ := p.translation(user)
 
-	commandSplit := strings.Split(request.Payload, " ")
+	request.Reminder.Target = "~" + channel.Name
 
-	if strings.HasPrefix(request.Payload, T("me")) ||
-		strings.HasPrefix(request.Payload, "~") ||
-		strings.HasPrefix(request.Payload, "@") {
+	firstIndex := strings.Index(request.Payload, "\"")
+	lastIndex := strings.LastIndex(request.Payload, "\"")
 
-		request.Reminder.Target = commandSplit[0]
+	if firstIndex > -1 && lastIndex > -1 && firstIndex != lastIndex { // has quotes
 
-		firstIndex := strings.Index(request.Payload, "\"")
-		lastIndex := strings.LastIndex(request.Payload, "\"")
+		message := request.Payload[firstIndex : lastIndex+1]
 
-		if firstIndex > -1 && lastIndex > -1 && firstIndex != lastIndex { // has quotes
+		when := strings.Replace(request.Payload, message, "", -1)
+		when = strings.Trim(when, " ")
 
-			message := request.Payload[firstIndex : lastIndex+1]
+		message = strings.Replace(message, "\"", "", -1)
 
-			when := strings.Replace(request.Payload, message, "", -1)
-			when = strings.Replace(when, request.Reminder.Target, "", 1)
-			when = strings.Trim(when, " ")
-
-			message = strings.Replace(message, "\"", "", -1)
-
-			request.Reminder.When = when
-			request.Reminder.Message = message
-			return nil
-		}
-
-		if wErr := p.findWhen(request); wErr != nil {
-			return wErr
-		}
-
-		toIndex := strings.Index(request.Reminder.When, T("to")+" ")
-		if toIndex > -1 {
-			request.Reminder.When = request.Reminder.When[0:toIndex]
-		}
-
-		message := strings.Replace(request.Payload, request.Reminder.When, "", -1)
-		message = strings.Replace(message, request.Reminder.Target, "", 1)
-		message = strings.Trim(message, " \"")
-
-		if message == "" {
-			return errors.New("no message parsed")
-		}
+		request.Reminder.When = when
 		request.Reminder.Message = message
-
 		return nil
-
-	} else {
-		request.Reminder.Target = T("me")
-
-		firstIndex := strings.Index(request.Payload, "\"")
-		lastIndex := strings.LastIndex(request.Payload, "\"")
-
-		if firstIndex > -1 && lastIndex > -1 && firstIndex != lastIndex { // has quotes
-
-			message := request.Payload[firstIndex : lastIndex+1]
-
-			when := strings.Replace(request.Payload, message, "", -1)
-			when = strings.Trim(when, " ")
-
-			message = strings.Replace(message, "\"", "", -1)
-
-			request.Reminder.When = when
-			request.Reminder.Message = message
-			return nil
-		}
-
-		if wErr := p.findWhen(request); wErr != nil {
-			return wErr
-		}
-
-		toIndex := strings.Index(request.Reminder.When, T("to")+" ")
-		if toIndex > -1 {
-			request.Reminder.When = request.Reminder.When[0:toIndex]
-		}
-
-		message := strings.Replace(request.Payload, request.Reminder.When, "", -1)
-		message = strings.Trim(message, " \"")
-
-		if message == "" {
-			return errors.New("no message parsed")
-		}
-		request.Reminder.Message = message
-
-		return nil
-
 	}
 
+	if wErr := p.findWhen(request); wErr != nil {
+		return wErr
+	}
+
+	toIndex := strings.Index(request.Reminder.When, T("to")+" ")
+	if toIndex > -1 {
+		request.Reminder.When = request.Reminder.When[0:toIndex]
+	}
+
+	message := strings.Replace(request.Payload, request.Reminder.When, "", -1)
+	message = strings.Trim(message, " \"")
+
+	if message == "" {
+		return errors.New("no message parsed")
+	}
+	request.Reminder.Message = message
+
+	return nil
 }
 
 func (p *Plugin) findWhen(request *ReminderRequest) error {
